@@ -1,0 +1,25 @@
+<html>
+  <head>
+    <title>User C.R.U.D usecases</title>
+  </head>
+
+  <body>
+    <h1>[List Form] - list and Delete use case</h1>
+    <a href="/user/_?op=c">Create</a>
+    <table>
+      <tbody>
+        <tr th:each="obj : ${usersdatasource}">
+          <td th:text="${obj.password}">password</td>
+          <td th:text="${obj.username}">username</td>
+          <td>
+            <a th:href="${obj.username} + '?op=r'">Read</a>
+            <a th:href="${obj.username} + '?op=u'">Update</a>
+            <a th:href="${obj.username} + '?op=d'">Delete</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
+
+
