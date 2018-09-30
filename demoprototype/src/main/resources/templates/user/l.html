@@ -12,9 +12,9 @@
           <td th:text="${obj.password}">password</td>
           <td th:text="${obj.username}">username</td>
           <td>
-            <a th:href="${obj.username} + '?op=r'">Read</a>
-            <a th:href="${obj.username} + '?op=u'">Update</a>
-            <a th:href="${obj.username} + '?op=d'">Delete</a>
+            <a th:href="'username_' + ${obj.username.length()} + '_' + ${obj.username} + '?op=r'">Read</a>
+            <a th:href="'username_' + ${obj.username.length()} + '_' + ${obj.username} + '?op=u'">Update</a>
+            <a th:href="'username_' + ${obj.username.length()} + '_' + ${obj.username} + '?op=d'">Delete</a>
           </td>
         </tr>
       </tbody>

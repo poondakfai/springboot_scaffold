@@ -35,6 +35,10 @@ public class DemoCommandObject implements ICommandObject {
     return this.user;
   }
 
+  public Class getRootClass() {
+    return User.class;
+  }
+
   public Role getRole() {
     return role;
   }
@@ -65,8 +69,10 @@ public class DemoCommandObject implements ICommandObject {
     return "";
   }
 
-  public void setRoot(Object user) {
-    this.user = (User)user;
+  public void setRoot(Object root) {
+    if (root != null && User.class.isAssignableFrom(root.getClass())) {
+      this.user = (User)root;
+    }
   }
 
   public void setRole(Role role) {

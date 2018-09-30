@@ -7,11 +7,81 @@ import javax.persistence.OneToMany;
 import org.springframework.beans.BeanUtils;
 import org.poondakfai.prototype.scaffold.webgui.form.model.ICommandObject;
 import java.lang.reflect.ParameterizedType;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
+import org.springframework.core.convert.ConversionService;
 
 
 public class CommandObjectPropertyUtils {
-  private static boolean TRACE_ENABLE = !false;
+  private static final boolean TRACE_ENABLE = !false;
 
+
+  public static Object decodeRootKey(
+    ICommandObject cmdobj,
+    String encodedKey,
+    ConversionService conversionService
+  ) {
+    Object result = null;
+    // Find the target object class type
+    if (cmdobj == null) {
+      if (TRACE_ENABLE) {
+        System.out.println("decodeRootKey: cmdobj is null");
+      }
+      return null;
+    }
+    Class targetObjClass = cmdobj.getRootClass();
+
+    // Determite if targetObjClass key is single property or multiple property?
+    IdClass idClass = (IdClass) targetObjClass.getAnnotation(IdClass.class);
+    if (idClass == null) {
+      if (TRACE_ENABLE) {
+        System.out.println("decodeRootKey: Single property key");
+      }
+      // Find field key in class key list
+      Field[] fields = targetObjClass.getDeclaredFields();
+      for (Field field : fields) {
+        Id keyAnnotation = (Id) field.getAnnotation(Id.class);
+        if (keyAnnotation != null) {
+          // This is key field because it is annotated by @Id
+          // Let's extract the field value presentated in String type
+          Class<?> keyClass = field.getType();
+          String fieldName = field.getName();
+          String fieldValue = CommandObjectPropertyUtils.extractEncodedRootKey(
+            fieldName, encodedKey.toCharArray());
+          try {
+            result = conversionService.convert(fieldValue, keyClass);
+          }
+          catch(Exception e) {
+            result = null;
+          }
+          if (TRACE_ENABLE) {
+            if (result == null) {
+              System.out.println("decodeRootKey: could not convert value '"
+                + fieldValue
+                + "'@class-"
+                + keyClass
+              );
+            }
+            else {
+              System.out.println(
+                "decodeRootKey: Single property key value is '"
+                + result
+                + "'@class-"
+                + result.getClass().getSimpleName()
+              );
+            }
+          }
+        }
+      }
+    }
+    else {
+      if (TRACE_ENABLE) {
+        System.out.println("decodeRootKey: Multiple properties key");
+      }
+      // @TODO Implement multiple properties key or null will be returned.
+    }
+    return result;
+  }
 
   public static boolean copyRootFlatPropertyToSession(Object sessionObject,
     SFModel model) {
@@ -241,6 +311,58 @@ public class CommandObjectPropertyUtils {
         "##############################################################");
     }
     return true;
+  }
+
+  private static String extractEncodedRootKey(
+    String fieldName,
+    char[] encodedBuffer
+  ) {
+    int phase;
+    int strLen = encodedBuffer.length;
+    int idx = 0;
+    int preIdx = idx;
+    String prop = null;
+    String value = null;
+    int valueLen = 0;
+
+    while(idx < strLen) {
+      for (phase = 0; phase < 3; phase++) {
+        if (phase < 2) {
+          for (idx = preIdx; idx < strLen && encodedBuffer[idx] != '_'; idx++);
+          if (phase == 0) {
+            prop = String.copyValueOf(encodedBuffer, preIdx, (idx - preIdx));
+          }
+          else {
+            String str = String.copyValueOf(
+              encodedBuffer, preIdx, (idx - preIdx));
+            valueLen =  Integer.parseInt(str, 10);
+          }
+          preIdx = idx + 1;
+        }
+        else {
+          value = String.copyValueOf(encodedBuffer, preIdx, valueLen);
+          idx = preIdx + valueLen + 1; // exclude next token '_' -> + 1
+          preIdx = idx;
+        }
+      }
+      if (TRACE_ENABLE) {
+        if (fieldName.compareTo(prop) == 0) {
+          System.out.println("\nProperty found");
+        }
+        else {
+          System.out.println("\nProperty not found");
+        }
+        System.out.println(
+          "Prop: " + prop
+          + "\nValue: " + value
+          + "\nLen: " + valueLen
+        );
+      }
+      if (fieldName.compareTo(prop) == 0) {
+        return value;
+      }
+    }
+    return null;
   }
 }
 

@@ -8,21 +8,30 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanInstantiationException;
+import org.springframework.core.convert.ConversionService;
 import org.poondakfai.prototype.scaffold.webgui.form.model.ICommandObject;
+import org.poondakfai.prototype.scaffold.webgui.form.model.SessionCommandObject;
+import org.poondakfai.prototype.scaffold.webgui.form.model.KeyPool;
 
 
 public class Form<T, ID> {
   public static final String OP_CODE = "op";
-
   private Class cmdObjClass;
   private CrudRepository<T, ID> repository;
   private String name;
+  private ConversionService conversionService;
 
 
-  public Form(Class cmdObjClass, CrudRepository<T, ID> repository, String name) {
+  public Form(
+    Class cmdObjClass,
+    CrudRepository<T, ID> repository,
+    String name,
+    ConversionService conversionService
+  ) {
     this.cmdObjClass = cmdObjClass;
     this.repository = repository;
     this.name = name;
+    this.conversionService = conversionService;
   }
 
   public CrudRepository<T, ID> getRepository() {
@@ -51,9 +60,8 @@ public class Form<T, ID> {
           break;
 
         case 'r':
-          break;
-
         case 'u':
+          result = detailRootPageShow(o);
           break;
 
         case 'd':
@@ -96,17 +104,19 @@ public class Form<T, ID> {
     return this.name;
   }
 
-  private ICommandObject getTargetObject(HttpServletRequest req) {
-    ICommandObject result = (ICommandObject)req.getSession()
+  private SessionCommandObject getTargetObject(HttpServletRequest req) {
+    SessionCommandObject result = (SessionCommandObject)req.getSession()
       .getAttribute(this.getSessionAttributeName());
     if (result == null) {
       try {
-        result = (ICommandObject) BeanUtils.instantiateClass(this.cmdObjClass);
+        ICommandObject cmdobj = (ICommandObject) BeanUtils
+          .instantiateClass(this.cmdObjClass);
         System.out.println("Create new session object");
         // Default op is 'c' if other is expected??? REVIEWED ME
         // System.out.println("Cheating, this session is created as update before");
-        result.setOp("c");
-        result.setActionCode('c');
+        cmdobj.setOp("c");
+        cmdobj.setActionCode('c');
+        result = new SessionCommandObject(cmdobj, new KeyPool());
         req.getSession().setAttribute(this.getSessionAttributeName(), result);
         System.out.println("Create new session object DONE");
       }
@@ -124,6 +134,26 @@ public class Form<T, ID> {
     if (model.getRequest().getSession(false) != null) {
       model.getRequest().getSession(false).invalidate();
     }
+    return model.getViewTemplate();
+  }
+
+  private String detailRootPageShow(SFModel model) {
+    System.out.println("private String detailRootPageShow(SFModel model)");
+    ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
+    ObjectIdentifier oi = model.getRoot();
+    Object rootKey = CommandObjectPropertyUtils.decodeRootKey(
+      model.getCmdobj(),
+      oi.getId(),
+      this.conversionService
+    );
+    T targetObj = this.getRepository().findById((ID) rootKey).orElse(null);
+    sobj.setRoot(targetObj);
+    model.getModel().addAttribute("cmdobj", sobj);
+    String[] strs =  new String[2];
+    strs[0] = model.getRequest().getServletPath();
+    strs[1] = model.getRequest().getServletPath() + "/authorities/_";
+    sobj.setActionUrls(strs);
+    // Load object
     return model.getViewTemplate();
   }
 
@@ -149,7 +179,7 @@ public class Form<T, ID> {
     System.out.println("private String createRootPageShow(SFModel model)");
     createPageShow(model.getModel(), model.getRedirectAttrs(), model.getRequest());
 
-    ICommandObject sobj = getTargetObject(model.getRequest());
+    ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
     String[] strs =  new String[2];
     strs[0] = model.getRequest().getServletPath();
     strs[1] = model.getRequest().getServletPath() + "/authorities/_";
@@ -168,7 +198,7 @@ public class Form<T, ID> {
     // Render model form flat properties and detail level 1 properties
 
     // Get session object
-    ICommandObject sobj = getTargetObject(req);
+    ICommandObject sobj = getTargetObject(req).getCmdobj();
     // Cheating process detect
     model.addAttribute("cmdobj", sobj); // USE THIS FOR ENTRY POINT SUB FORM
     //return "user";
@@ -204,7 +234,7 @@ public class Form<T, ID> {
 
     System.out.println("[Create Form] - create click");
 
-    ICommandObject sobj = getTargetObject(req);
+    ICommandObject sobj = getTargetObject(req).getCmdobj();
     if (CommandObjectPropertyUtils.copyRootFlatPropertyToSession(sobj, model)) {
       try {
  
@@ -227,7 +257,7 @@ public class Form<T, ID> {
 
   private String createChildPageShow(SFModel model) {
     System.out.println("private String createChildPageShow(SFModel model)");
-    ICommandObject sobj = getTargetObject(model.getRequest());
+    ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
 
     if (!CommandObjectPropertyUtils.copyChildObjectToSession(sobj, model)) {
       return "redirect:" + model.getParentUrl();

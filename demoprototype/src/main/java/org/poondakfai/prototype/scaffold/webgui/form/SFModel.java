@@ -95,9 +95,9 @@ public class SFModel {
     return this.getPath().length <= 1;
   }
 
-  public String getRoot() {
+  public ObjectIdentifier getRoot() {
     ObjectIdentifier[] a = this.getPath();
-    return a.length > 0 ? a[0].getName() : "";
+    return a.length > 0 ? a[0] : null;
   }
 
   public String getHomeUrl() {

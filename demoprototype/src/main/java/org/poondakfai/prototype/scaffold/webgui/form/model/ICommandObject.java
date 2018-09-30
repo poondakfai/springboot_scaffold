@@ -7,6 +7,7 @@ public interface ICommandObject {
   public String getOp();
   public String getFormaction();
   public Object getRoot();
+  public Class getRootClass();
 
   public void setRoot(Object root);
   public void setActionUrls(String[] actionUrls);

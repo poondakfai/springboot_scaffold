@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <title>User R usecases</title>
+  </head>
+
+  <body>
+    <h1>[Read Form] - Read use case</h1>
+    <hr />
+
+    <form action="/user" th:action="${cmdobj.actionUrls[0]}" th:object="${cmdobj}" method="post">
+      <!-  input type="hidden" name="id" th:value="*{user.username}" th:if="*{actionCode} == 'r'"/ -->
+      <label for="username">Username: </label><input type="text" th:field="*{user.username}" /> <br />
+      <label for="password">Password: </label><input type="text" th:field="*{user.password}" /> <br />
+      <button type="submit" th:name="op" th:text="'Create'" value="p" th:if="*{actionCode} == 'c'">Create</button>
+      <button type="submit" th:name="op" th:text="'Update'" value="s" th:if="*{actionCode} == 'u'">Update</button>
+    </form>
+
+    <h1>Roles</h1>
+
+    <form action="/user" th:action="${cmdobj.actionUrls[1]}" th:object="${cmdobj}" method="post">
+      <label for="role.id">Id: </label><input type="text" th:field="*{role.id}" /> <br />
+      <button type="submit" th:name="op" th:text="'Add C'" value="c" th:if="*{actionCode} == 'c'">[Add]</button>
+      <button type="submit" th:name="op" th:text="'Add U'" value="c" th:if="*{actionCode} == 'u'">[Add]</button>
+    </form>
+  
+    <table>
+      <tbody>
+        <tr th:each="obj : ${cmdobj.user.authorities}">
+          <td th:text="${obj.id}">id</td>
+          <td>
+            <!-- null id mean session object -->
+            <!-- a th:href="'role?op=r'">Read</a --> <!-- read should be disabled for new or update usecase-->
+            <a th:href="'role?op=u'">Update</a>
+            <a th:href="'role?op=d'">Delete</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  <a href="/user/_?op=l">Cancel</a>
+  </body>
+</html>

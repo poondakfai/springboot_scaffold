@@ -19,13 +19,14 @@ import org.poondakfai.prototype.scaffold.webgui.form.Form;
 @Controller
 public class DemoController {
   private UserRepository userRepository;
+
+  @Autowired
   private Form<User, String> demoForm;
 
 
   // DEMO controller wire up code
   public DemoController(@Autowired UserRepository userRepository) {
     this.userRepository = userRepository;
-    this.demoForm = new Form<User, String>(DemoCommandObject.class, userRepository, "formname");
   }
 
   @RequestMapping(
