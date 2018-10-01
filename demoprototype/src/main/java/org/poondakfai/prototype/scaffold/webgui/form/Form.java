@@ -149,10 +149,7 @@ public class Form<T, ID> {
     T targetObj = this.getRepository().findById((ID) rootKey).orElse(null);
     sobj.setRoot(targetObj);
     model.getModel().addAttribute("cmdobj", sobj);
-    String[] strs =  new String[2];
-    strs[0] = model.getRequest().getServletPath();
-    strs[1] = model.getRequest().getServletPath() + "/authorities/_";
-    sobj.setActionUrls(strs);
+    sobj.setActionUrls(model.getActionUrls());
     // Load object
     return model.getViewTemplate();
   }
@@ -178,12 +175,8 @@ public class Form<T, ID> {
   private String createRootPageShow(SFModel model) {
     System.out.println("private String createRootPageShow(SFModel model)");
     createPageShow(model.getModel(), model.getRedirectAttrs(), model.getRequest());
-
     ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
-    String[] strs =  new String[2];
-    strs[0] = model.getRequest().getServletPath();
-    strs[1] = model.getRequest().getServletPath() + "/authorities/_";
-    sobj.setActionUrls(strs);
+    sobj.setActionUrls(model.getActionUrls());
     return model.getViewTemplate();
   }
 

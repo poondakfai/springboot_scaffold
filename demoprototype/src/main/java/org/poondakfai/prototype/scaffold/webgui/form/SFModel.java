@@ -2,6 +2,10 @@ package org.poondakfai.prototype.scaffold.webgui.form;
 
 
 import java.util.StringTokenizer;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Modifier;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -138,6 +142,76 @@ public class SFModel {
     // System.out.println(buffer.toString());
     // System.out.println("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT");
     return buffer.toString();
+  }
+
+  public String[] getActionUrls() {
+    String url0 = this.getRequest().getServletPath();
+    String[] result = new String[] {url0};
+    Class targetClass = this.getTargetObjectClass();
+    if (targetClass == null) {
+      return result;
+    }
+    Method[] methods = targetClass.getMethods();
+    String[] propNames = new String[methods.length];
+    int propNameCount = 0;
+    int i = 0;
+    for (Method m : methods) {
+      String name = m.getName();
+      if (name.startsWith("get")
+        && Iterable.class.isAssignableFrom(m.getReturnType())) {
+        propNames[propNameCount++] = Character.toLowerCase(name.charAt(3))
+          + name.substring(4, name.length());
+      }
+    }
+    if (propNameCount == 0) {
+      return result;
+    }
+    result =  new String[propNameCount + 1];
+    result[0] = url0;
+    for (i = 0; i < propNameCount; i++){
+      result[i + 1] = url0 + "/" + propNames[i];
+      //System.out.println("\t\t\t" + result[i + 1]);
+    }
+    return result;
+  }
+
+  public Class getTargetObjectClass() {
+    Class clazz = this.getCmdobj().getRootClass();
+    // Travel the path to get the target object class
+    ObjectIdentifier[] a = this.getPath();
+    int n = a.length;
+    int i;
+    boolean isSuccessfull = true;
+
+    for (i = 1; i < n; i++) {
+      String name = a[i].getName();
+      int len = name.length();
+      String getterMethodName = "get"
+        + Character.toUpperCase(name.charAt(0))
+        + name.substring(1, len);
+      try {
+        Method m = clazz.getDeclaredMethod(getterMethodName);
+        if (Modifier.isPublic(m.getModifiers())) {
+          Type type = m.getGenericReturnType();
+          if (type instanceof ParameterizedType) {
+            ParameterizedType paramType = (ParameterizedType) type;
+            if(paramType.getActualTypeArguments().length == 1) {
+              Type elementType = paramType.getActualTypeArguments()[0];
+              String elementClassName = elementType.getTypeName();
+              clazz = Class.forName(elementClassName);
+            }
+          }
+        }
+      }
+      catch(Exception e) {
+        isSuccessfull = false;
+        break;
+      }
+    }
+    if (isSuccessfull) {
+      return clazz;
+    }
+    return null;
   }
 
   private ObjectIdentifier getObjectIdentifier() {
