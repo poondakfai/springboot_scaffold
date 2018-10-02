@@ -52,23 +52,23 @@ public class Form<T, ID> {
     if (o.isRoot()) {
       switch (o.getOperationCode()) {
         case 'l':
-          result = listRootPageShow(o);
+          result = showRootListPage(o);
           break;
 
-        case 'c': // 'p' persist
-          result = createRootPageShow(o);
+        case 'c': // next phase 'p' code to persist
+          result = showRootCreatePage(o);
           break;
 
         case 'r':
         case 'u':
-          result = detailRootPageShow(o);
+          result = showRootDetailPage(o);
           break;
 
         case 'd':
           break;
 
         case 'p':
-          result = createRootPageDo(o);
+          result = doCreateRootPage(o);
           break;
 
         default:
@@ -77,11 +77,8 @@ public class Form<T, ID> {
     }
     else {
       switch (o.getOperationCode()) {
-        case 'l':
-          break;
-
         case 'c':
-          result = createChildPageShow(o);
+          result = showChildCreatePage(o);
           break;
 
         case 'r':
@@ -100,46 +97,41 @@ public class Form<T, ID> {
     return result;
   }
 
-  private String getSessionAttributeName() {
-    return this.name;
-  }
-
-  private SessionCommandObject getTargetObject(HttpServletRequest req) {
-    SessionCommandObject result = (SessionCommandObject)req.getSession()
-      .getAttribute(this.getSessionAttributeName());
-    if (result == null) {
-      try {
-        ICommandObject cmdobj = (ICommandObject) BeanUtils
-          .instantiateClass(this.cmdObjClass);
-        System.out.println("Create new session object");
-        // Default op is 'c' if other is expected??? REVIEWED ME
-        // System.out.println("Cheating, this session is created as update before");
-        cmdobj.setOp("c");
-        cmdobj.setActionCode('c');
-        result = new SessionCommandObject(cmdobj, new KeyPool());
-        req.getSession().setAttribute(this.getSessionAttributeName(), result);
-        System.out.println("Create new session object DONE");
-      }
-      catch(BeanInstantiationException e) {
-        // e.printStackTrace();
-        result = null;
-      }
-    }
-    return result;
-  }
-
-  private String listRootPageShow(SFModel model) {
+  private String showRootListPage(SFModel model) {
     System.out.println("private String listRootPageShow(SFModel model)");
-    listPageShow(model.getModel(), model.getStatus());
+    // Clear session
+    // Load model from JPA
+    // create model attribute variable
+    // Render model flat properties by template
+    // status.setComplete();
     if (model.getRequest().getSession(false) != null) {
       model.getRequest().getSession(false).invalidate();
     }
+    Iterable<T> usersdatasource = this.getRepository().findAll();
+    model.getModel().addAttribute("usersdatasource", usersdatasource);
     return model.getViewTemplate();
   }
 
-  private String detailRootPageShow(SFModel model) {
-    System.out.println("private String detailRootPageShow(SFModel model)");
+  private String showRootCreatePage(SFModel model) {
+    System.out.println("private String createRootPageShow(SFModel model)");
+    // Retrieve session object
+    // (-)Not need to update op for session object (default constructor)
+    // Create model attribute variable from session object
+    // Prepare form action urls strings
+    // Render model form flat properties and detail level 1 properties
+
     ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
+    // @TODO cheating process detection
+    model.getModel().addAttribute("cmdobj", sobj);
+    sobj.setActionUrls(model.getActionUrls());
+    return model.getViewTemplate();
+  }
+
+  private String showRootDetailPage(SFModel model) {
+    System.out.println("private String detailRootPageShow(SFModel model)");
+
+    ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
+
     ObjectIdentifier oi = model.getRoot();
     Object rootKey = CommandObjectPropertyUtils.decodeRootKey(
       model.getCmdobj(),
@@ -154,83 +146,21 @@ public class Form<T, ID> {
     return model.getViewTemplate();
   }
 
-  // [List Form] - show
-  private String listPageShow(
-    ModelMap model,
-    SessionStatus status
-  ) {
-    // Clear session
-    // Load model from JPA
-    // create model attribute variable
-    // Render model flat properties by template
-    // status.setComplete();
-
-    // Iterable<User> usersdatasource = this.getRepository().findAll();
-    Iterable<T> usersdatasource = this.getRepository().findAll();
-    model.addAttribute("usersdatasource", usersdatasource);
-    //return "users";
-    return "";
-  }
-
-  private String createRootPageShow(SFModel model) {
-    System.out.println("private String createRootPageShow(SFModel model)");
-    createPageShow(model.getModel(), model.getRedirectAttrs(), model.getRequest());
-    ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
-    sobj.setActionUrls(model.getActionUrls());
-    return model.getViewTemplate();
-  }
-
-  // [Create Form] - show
-  public String createPageShow(
-    ModelMap model,
-    RedirectAttributes reAttrs,
-    final HttpServletRequest req) { // @TODO review Will HttpServletRequest req be use?
-    // Retrieve session object
-    // Update op for session object
-    // Create model attribute variable from session object
-    // Render model form flat properties and detail level 1 properties
-
-    // Get session object
-    ICommandObject sobj = getTargetObject(req).getCmdobj();
-    // Cheating process detect
-    model.addAttribute("cmdobj", sobj); // USE THIS FOR ENTRY POINT SUB FORM
-    //return "user";
-    return "";
-  }
-
-  private String createRootPageDo(SFModel model) {
+  private String doCreateRootPage(SFModel model) {
     System.out.println("private String createRootPageDo(SFModel model)");
-    createPageDoPersist(
-      model.getCmdobj(),
-      model,
-      model.getRedirectAttrs(),
-      model.getRequest(),
-      model.getStatus()
-    );
-    model.getRedirectAttrs().addAttribute("op", "l");
-    return "redirect:" + model.getHomeUrl();
-  }
+    System.out.println("[Create Form] - create click");
+    HttpServletRequest req = model.getRequest();
+    RedirectAttributes reAttrs = model.getRedirectAttrs();
 
-  // [Create Form] - 'create' click
-  private String createPageDoPersist(
-    final ICommandObject cmdobj,
-//    ModelMap model,
-    SFModel model,
-    RedirectAttributes reAttrs,
-    final HttpServletRequest req,
-    SessionStatus status) {
     // Retrieve session object
     // Update flat properties for session object with data provide from Cmd Object
     // Do persist and test result
-    // Optional clear data in the session object (prevent security risk)
+    // Clear data in the session object (prevent security risk)
     // Redirect to parent page
-
-    System.out.println("[Create Form] - create click");
-
     ICommandObject sobj = getTargetObject(req).getCmdobj();
+
     if (CommandObjectPropertyUtils.copyRootFlatPropertyToSession(sobj, model)) {
       try {
- 
         this.getRepository().save((T) sobj.getRoot());
         System.out.println("-> Persist new user is ok");
         if (req.getSession(false) != null) {
@@ -242,21 +172,50 @@ public class Form<T, ID> {
         e.printStackTrace();
       }
     }
-
     reAttrs.addAttribute("id", "");
     reAttrs.addAttribute("op", "l");
-    return "";
+    model.getRedirectAttrs().addAttribute("op", "l");
+    return "redirect:" + model.getHomeUrl();
   }
 
-  private String createChildPageShow(SFModel model) {
+  private String showChildCreatePage(SFModel model) {
     System.out.println("private String createChildPageShow(SFModel model)");
     ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
 
     if (!CommandObjectPropertyUtils.copyChildObjectToSession(sobj, model)) {
       return "redirect:" + model.getParentUrl();
     }
-    model.getRedirectAttrs().addAttribute("op", "c"); // how to retrieve this??
+    model.getRedirectAttrs().addAttribute("op", "c"); // @TODO how to retrieve this??
     return "redirect:" + model.getParentUrl();
+  }
+
+  private String getSessionAttributeName() {
+    // @TODO customize attribute name to void future name conflict
+    return this.name;
+  }
+
+  private SessionCommandObject getTargetObject(HttpServletRequest req) {
+    SessionCommandObject result = (SessionCommandObject)req.getSession()
+      .getAttribute(this.getSessionAttributeName());
+    if (result == null) {
+      try {
+        System.out.println("Create new session object");
+        ICommandObject cmdobj = (ICommandObject) BeanUtils
+          .instantiateClass(this.cmdObjClass);
+        // Default op is 'c' if other is expected??? REVIEWED ME
+        // System.out.println("Cheating, this session is created as update before");
+        cmdobj.setOp("c");
+        cmdobj.setActionCode('c');
+        result = new SessionCommandObject(cmdobj, new KeyPool());
+        req.getSession().setAttribute(this.getSessionAttributeName(), result);
+        System.out.println("Create new session object DONE");
+      }
+      catch(BeanInstantiationException e) {
+        // e.printStackTrace();
+        result = null;
+      }
+    }
+    return result;
   }
 }
 
