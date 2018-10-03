@@ -136,11 +136,12 @@ public class Form<T, ID> {
     ICommandObject sobj = loadTargetObject(model).getCmdobj();
 
     ObjectIdentifier oi = model.getRoot();
-    Object rootKey = CommandObjectPropertyUtils.decodeRootKey(
-      model.getCmdobj(),
-      oi.getId(),
-      this.conversionService
-    );
+    Object rootKey = CommandObjectPropertyUtils.getSingletonInstance()
+      .decodeRootKey(
+        model.getCmdobj(),
+        oi.getId(),
+        this.conversionService
+      );
     T targetObj = this.getRepository().findById((ID) rootKey).orElse(null);
     sobj.setRoot(targetObj);
     sobj.setActionUrls(model.getActionUrls());
@@ -161,7 +162,9 @@ public class Form<T, ID> {
     // Redirect to parent page
     ICommandObject sobj = getTargetObject(req).getCmdobj();
 
-    if (CommandObjectPropertyUtils.copyRootFlatPropertyToSession(sobj, model)) {
+    if (CommandObjectPropertyUtils.getSingletonInstance()
+      .copyRootFlatPropertyToSession(sobj, model)
+    ) {
       try {
         this.getRepository().save((T) sobj.getRoot());
         System.out.println("-> Persist new user is ok");
@@ -184,7 +187,9 @@ public class Form<T, ID> {
     System.out.println("private String createChildPageShow(SFModel model)");
     ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
 
-    if (!CommandObjectPropertyUtils.copyChildObjectToSession(sobj, model)) {
+    if (!CommandObjectPropertyUtils.getSingletonInstance()
+      .copyChildObjectToSession(sobj, model)
+    ) {
       return "redirect:" + model.getParentUrl();
     }
     model.getRedirectAttrs().addAttribute("op", "c"); // @TODO how to retrieve this??

@@ -14,9 +14,13 @@ import org.springframework.core.convert.ConversionService;
 
 public class CommandObjectPropertyUtils {
   private static final boolean TRACE_ENABLE = !false;
+  private static final CommandObjectPropertyUtils singleObject;
 
 
-  public static Object decodeRootKey(
+  private CommandObjectPropertyUtils() {
+  }
+
+  public Object decodeRootKey(
     ICommandObject cmdobj,
     String encodedKey,
     ConversionService conversionService
@@ -46,7 +50,7 @@ public class CommandObjectPropertyUtils {
           // Let's extract the field value presentated in String type
           Class<?> keyClass = field.getType();
           String fieldName = field.getName();
-          String fieldValue = CommandObjectPropertyUtils.extractEncodedRootKey(
+          String fieldValue = this.extractEncodedRootKey(
             fieldName, encodedKey.toCharArray());
           try {
             result = conversionService.convert(fieldValue, keyClass);
@@ -83,7 +87,7 @@ public class CommandObjectPropertyUtils {
     return result;
   }
 
-  public static boolean copyRootFlatPropertyToSession(Object sessionObject,
+  public boolean copyRootFlatPropertyToSession(Object sessionObject,
     SFModel model) {
     ICommandObject cmdobj = model.getCmdobj();
     if (cmdobj == null || sessionObject == null
@@ -145,7 +149,7 @@ public class CommandObjectPropertyUtils {
     return true;
   }
 
-  public static boolean copyChildObjectToSession(Object sessionObject,
+  public boolean copyChildObjectToSession(Object sessionObject,
     SFModel model) {
     StringBuffer sb = new StringBuffer();
     StringBuffer fProp = new StringBuffer();
@@ -313,7 +317,7 @@ public class CommandObjectPropertyUtils {
     return true;
   }
 
-  private static String extractEncodedRootKey(
+  private String extractEncodedRootKey(
     String fieldName,
     char[] encodedBuffer
   ) {
@@ -363,6 +367,14 @@ public class CommandObjectPropertyUtils {
       }
     }
     return null;
+  }
+
+  public static CommandObjectPropertyUtils getSingletonInstance() {
+    return CommandObjectPropertyUtils.singleObject;
+  }
+
+  static {
+    singleObject = new CommandObjectPropertyUtils();
   }
 }
 
