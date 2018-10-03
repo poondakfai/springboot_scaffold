@@ -3,20 +3,20 @@ package org.poondakfai.prototype.scaffold.webgui.form.model;
 
 public class SessionCommandObject {
   private ICommandObject cmdobj;
-  private KeyPool keyPool;
+  private Utilities utilities;
 
 
-  public SessionCommandObject(ICommandObject cmdobj, KeyPool keyPool) {
+  public SessionCommandObject(ICommandObject cmdobj, Utilities utilities) {
     this.cmdobj = cmdobj;
-    this.keyPool = keyPool;
+    this.utilities = utilities;
   }
 
   public ICommandObject getCmdobj() {
     return this.cmdobj;
   }
 
-  public KeyPool getKeyPool() {
-    return this.keyPool;
+  public Utilities getUtilities() {
+    return this.utilities;
   }
 }
 

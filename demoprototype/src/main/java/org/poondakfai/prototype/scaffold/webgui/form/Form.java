@@ -11,7 +11,7 @@ import org.springframework.beans.BeanInstantiationException;
 import org.springframework.core.convert.ConversionService;
 import org.poondakfai.prototype.scaffold.webgui.form.model.ICommandObject;
 import org.poondakfai.prototype.scaffold.webgui.form.model.SessionCommandObject;
-import org.poondakfai.prototype.scaffold.webgui.form.model.KeyPool;
+import org.poondakfai.prototype.scaffold.webgui.form.model.Utilities;
 
 
 public class Form<T, ID> {
@@ -123,9 +123,9 @@ public class Form<T, ID> {
     // Prepare form action urls strings
     // Render model form flat properties and detail level 1 properties
 
-    ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
     // @TODO cheating process detection
-    model.getModel().addAttribute(this.getCommandObjectAttributeName(), sobj);
+    ICommandObject sobj = loadTargetObject(model).getCmdobj();
+
     sobj.setActionUrls(model.getActionUrls());
     return model.getViewTemplate();
   }
@@ -133,7 +133,7 @@ public class Form<T, ID> {
   private String showRootDetailPage(SFModel model) {
     System.out.println("private String detailRootPageShow(SFModel model)");
 
-    ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
+    ICommandObject sobj = loadTargetObject(model).getCmdobj();
 
     ObjectIdentifier oi = model.getRoot();
     Object rootKey = CommandObjectPropertyUtils.decodeRootKey(
@@ -143,7 +143,6 @@ public class Form<T, ID> {
     );
     T targetObj = this.getRepository().findById((ID) rootKey).orElse(null);
     sobj.setRoot(targetObj);
-    model.getModel().addAttribute(this.getCommandObjectAttributeName(), sobj);
     sobj.setActionUrls(model.getActionUrls());
     // Load object
     return model.getViewTemplate();
@@ -192,6 +191,14 @@ public class Form<T, ID> {
     return "redirect:" + model.getParentUrl();
   }
 
+  private SessionCommandObject loadTargetObject(SFModel sfModel) {
+    SessionCommandObject tObj = getTargetObject(sfModel.getRequest());
+    ModelMap model = sfModel.getModel();
+    model.addAttribute(this.getCommandObjectAttributeName(), tObj.getCmdobj());
+    model.addAttribute(this.getUtilitiesAttributeName(), tObj.getUtilities());
+    return tObj;
+  }
+
   private SessionCommandObject getTargetObject(HttpServletRequest req) {
     SessionCommandObject result = (SessionCommandObject)req.getSession()
       .getAttribute(this.getSessionAttributeName());
@@ -204,7 +211,7 @@ public class Form<T, ID> {
         // System.out.println("Cheating, this session is created as update before");
         cmdobj.setOp("c");
         cmdobj.setActionCode('c');
-        result = new SessionCommandObject(cmdobj, new KeyPool());
+        result = new SessionCommandObject(cmdobj, new Utilities());
         req.getSession().setAttribute(this.getSessionAttributeName(), result);
         System.out.println("Create new session object DONE");
       }
@@ -227,6 +234,10 @@ public class Form<T, ID> {
 
   private String getDataSourceAttributeName() {
     return this.name + "datasource";
+  }
+
+  private String getUtilitiesAttributeName() {
+    return this.name + "utils";
   }
 }
 
