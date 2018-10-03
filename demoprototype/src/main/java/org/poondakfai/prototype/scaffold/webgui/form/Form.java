@@ -108,7 +108,10 @@ public class Form<T, ID> {
       model.getRequest().getSession(false).invalidate();
     }
     Iterable<T> usersdatasource = this.getRepository().findAll();
-    model.getModel().addAttribute("usersdatasource", usersdatasource);
+    model.getModel().addAttribute(
+      this.getDataSourceAttributeName(),
+      usersdatasource
+    );
     return model.getViewTemplate();
   }
 
@@ -122,7 +125,7 @@ public class Form<T, ID> {
 
     ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
     // @TODO cheating process detection
-    model.getModel().addAttribute("cmdobj", sobj);
+    model.getModel().addAttribute(this.getCommandObjectAttributeName(), sobj);
     sobj.setActionUrls(model.getActionUrls());
     return model.getViewTemplate();
   }
@@ -140,7 +143,7 @@ public class Form<T, ID> {
     );
     T targetObj = this.getRepository().findById((ID) rootKey).orElse(null);
     sobj.setRoot(targetObj);
-    model.getModel().addAttribute("cmdobj", sobj);
+    model.getModel().addAttribute(this.getCommandObjectAttributeName(), sobj);
     sobj.setActionUrls(model.getActionUrls());
     // Load object
     return model.getViewTemplate();
@@ -189,11 +192,6 @@ public class Form<T, ID> {
     return "redirect:" + model.getParentUrl();
   }
 
-  private String getSessionAttributeName() {
-    // @TODO customize attribute name to void future name conflict
-    return this.name;
-  }
-
   private SessionCommandObject getTargetObject(HttpServletRequest req) {
     SessionCommandObject result = (SessionCommandObject)req.getSession()
       .getAttribute(this.getSessionAttributeName());
@@ -216,6 +214,19 @@ public class Form<T, ID> {
       }
     }
     return result;
+  }
+
+  // Attribute names organization
+  private String getSessionAttributeName() {
+    return this.name;
+  }
+
+  private String getCommandObjectAttributeName() {
+    return this.name + "cmdobj";
+  }
+
+  private String getDataSourceAttributeName() {
+    return this.name + "datasource";
   }
 }
 
