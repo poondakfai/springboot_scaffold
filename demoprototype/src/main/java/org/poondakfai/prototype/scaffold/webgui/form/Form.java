@@ -10,7 +10,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanInstantiationException;
 import org.springframework.core.convert.ConversionService;
 import org.poondakfai.prototype.scaffold.webgui.form.model.ICommandObject;
-import org.poondakfai.prototype.scaffold.webgui.form.model.SessionCommandObject;
+import org.poondakfai.prototype.scaffold.webgui.form.model.SessionObject;
 import org.poondakfai.prototype.scaffold.webgui.form.model.Utilities;
 
 
@@ -191,16 +191,16 @@ public class Form<T, ID> {
     return "redirect:" + model.getParentUrl();
   }
 
-  private SessionCommandObject loadTargetObject(SFModel sfModel) {
-    SessionCommandObject tObj = getTargetObject(sfModel.getRequest());
+  private SessionObject loadTargetObject(SFModel sfModel) {
+    SessionObject tObj = getTargetObject(sfModel.getRequest());
     ModelMap model = sfModel.getModel();
     model.addAttribute(this.getCommandObjectAttributeName(), tObj.getCmdobj());
     model.addAttribute(this.getUtilitiesAttributeName(), tObj.getUtilities());
     return tObj;
   }
 
-  private SessionCommandObject getTargetObject(HttpServletRequest req) {
-    SessionCommandObject result = (SessionCommandObject)req.getSession()
+  private SessionObject getTargetObject(HttpServletRequest req) {
+    SessionObject result = (SessionObject)req.getSession()
       .getAttribute(this.getSessionAttributeName());
     if (result == null) {
       try {
@@ -211,7 +211,7 @@ public class Form<T, ID> {
         // System.out.println("Cheating, this session is created as update before");
         cmdobj.setOp("c");
         cmdobj.setActionCode('c');
-        result = new SessionCommandObject(cmdobj, new Utilities());
+        result = new SessionObject(cmdobj, new Utilities());
         req.getSession().setAttribute(this.getSessionAttributeName(), result);
         System.out.println("Create new session object DONE");
       }

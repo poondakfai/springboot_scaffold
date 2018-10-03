@@ -1,12 +1,12 @@
 package org.poondakfai.prototype.scaffold.webgui.form.model;
 
 
-public class SessionCommandObject {
+public class SessionObject {
   private ICommandObject cmdobj;
   private Utilities utilities;
 
 
-  public SessionCommandObject(ICommandObject cmdobj, Utilities utilities) {
+  public SessionObject(ICommandObject cmdobj, Utilities utilities) {
     this.cmdobj = cmdobj;
     this.utilities = utilities;
   }
