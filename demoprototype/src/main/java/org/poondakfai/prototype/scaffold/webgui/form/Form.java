@@ -72,6 +72,10 @@ public class Form<T, ID> {
           result = doCreateRootPage(o);
           break;
 
+        case 's':
+          result = doUpdateRootPage(o);
+          break;
+
         default:
           break;
       }
@@ -210,6 +214,46 @@ public class Form<T, ID> {
     return "redirect:" + model.getHomeUrl();
   }
 
+  private String doUpdateRootPage(SFModel model) {
+    System.out.println("private String doUpdateRootPage(SFModel model)");
+    RedirectAttributes reAttrs = model.getRedirectAttrs();
+    HttpServletRequest req = model.getRequest();
+    ICommandObject sobj = getTargetObject(req).getCmdobj();
+
+    // Root object key retreive
+    ObjectIdentifier oi = model.getRoot();
+    Object rootKey = CommandObjectPropertyUtils.getSingletonInstance()
+      .decodeRootKey(
+        model.getCmdobj(),
+        oi.getId(),
+        this.conversionService
+      );
+    // @TODO verify key is changed by cheat!
+
+    if (CommandObjectPropertyUtils.getSingletonInstance()
+      .copyRootFlatPropertyToSession(sobj, model)
+    ) {
+      try {
+        // Reload object (since transaction is expired)
+        this.getRepository().findById((ID) rootKey).orElse(null);
+        // Persist after refresh transaction
+        this.getRepository().save((T) sobj.getRoot());
+        System.out.println("-> Persist update user is ok");
+        if (req.getSession(false) != null) {
+          req.getSession(false).invalidate();
+        }
+        System.out.println("-> Clear session is ok");
+      }
+      catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+
+    reAttrs.addAttribute("op", "l");
+    model.getRedirectAttrs().addAttribute("op", "l");
+    return "redirect:_";
+  }
+
   private String showChildCreatePage(SFModel model) {
     System.out.println("private String createChildPageShow(SFModel model)");
     ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
@@ -247,6 +291,12 @@ public class Form<T, ID> {
     ModelMap model = sfModel.getModel();
     model.addAttribute(this.getCommandObjectAttributeName(), tObj.getCmdobj());
     model.addAttribute(this.getUtilitiesAttributeName(), tObj.getUtilities());
+
+    char op = sfModel.getOperationCode();
+    // @TODO Please draw a state diagram to clarify below code
+    if (op == 'u') {
+      tObj.getCmdobj().setActionCode(op);
+    }
     return tObj;
   }
 
