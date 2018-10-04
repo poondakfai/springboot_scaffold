@@ -65,6 +65,7 @@ public class Form<T, ID> {
           break;
 
         case 'd':
+          result = doRootDeletePage(o);
           break;
 
         case 'p':
@@ -148,6 +149,31 @@ public class Form<T, ID> {
     sobj.setActionUrls(model.getActionUrls());
     // Load object
     return model.getViewTemplate();
+  }
+
+  private String doRootDeletePage(SFModel model) {
+    System.out.println("private String doRootDeletePage(SFModel model)");
+    RedirectAttributes reAttrs = model.getRedirectAttrs();
+    reAttrs.addAttribute("op", "l");
+
+    ObjectIdentifier oi = model.getRoot();
+    Object rootKey = CommandObjectPropertyUtils.getSingletonInstance()
+      .decodeRootKey(
+        model.getCmdobj(),
+        oi.getId(),
+        this.conversionService
+      );
+    try {
+      T targetObj = this.getRepository().findById((ID) rootKey).orElse(null);
+      this.getRepository().delete(targetObj);
+    }
+    catch(Exception e) {
+      //e.printStackTrace();
+      System.out.println("Could not delete object: "
+        + (oi == null ? "null" : oi.getId())
+      );
+    }
+    return "redirect:_";
   }
 
   private String doCreateRootPage(SFModel model) {
