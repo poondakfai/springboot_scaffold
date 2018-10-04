@@ -10,6 +10,7 @@ import java.lang.reflect.ParameterizedType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import org.springframework.core.convert.ConversionService;
+import java.util.Collection;
 
 
 public class CommandObjectPropertyUtils {
@@ -18,6 +19,10 @@ public class CommandObjectPropertyUtils {
 
 
   private CommandObjectPropertyUtils() {
+  }
+
+  public static CommandObjectPropertyUtils getSingletonInstance() {
+    return CommandObjectPropertyUtils.singleObject;
   }
 
   public Object decodeRootKey(
@@ -152,96 +157,30 @@ public class CommandObjectPropertyUtils {
   public boolean copyChildObjectToSession(Object sessionObject,
     SFModel model) {
     StringBuffer sb = new StringBuffer();
-    StringBuffer fProp = new StringBuffer();
-    String lastProp = null;
-    Object sObj = sessionObject;
-    Object sBakObj = null;
-    Class sObjClass = model.getCmdobj().getClass();
-    Class sBakClass = sObjClass;
-    boolean isFirst = true;
-
-    if (TRACE_ENABLE) {
-      System.out.println(
-        "##############################################################");
+    Object sObj = travelSessionObjectFromRootToParent(sessionObject, model, sb);
+    if (sObj == null) {
+      return false;
     }
-    // Travel sessionObject to
-    //  . Src - fProp: Compute flat property name of command object
-    //  . Des - sObj:  Retrieve the parent object of flat property
-    //                 parent object: nested property of session object
-    //  . sObjClass:   Class type of sObj
-    fProp.append("get");
-    if (TRACE_ENABLE) {
-     System.out.println("Travel session object methods:");
-    }
-    for (ObjectIdentifier oi : model.getPath()) {
-      // compute getter method name to travel the session object
-      sb.append("get");
-      lastProp = oi.getName();
-      sb.append(Character.toUpperCase(lastProp.charAt(0)));
-      sb.append(lastProp.substring(1));
-      if (TRACE_ENABLE) {
-       System.out.println("\t" + sb.toString());
-      }
-
-      // flat property name compute
-      if (!isFirst) {
-        fProp.append(Character.toUpperCase(oi.getName().charAt(0)));
-        fProp.append(oi.getName().substring(1));
-      }
-      isFirst = false;
-
-      // trave one step property of session object
-      try {
-        Method m = BeanUtils.findMethodWithMinimalParameters(sObjClass,
-          sb.toString());
-        if (m.getParameterCount() == 0) {
-          sBakObj = sObj;
-          sObj = m.invoke(sObj);
-          sBakClass = sObjClass;
-          sObjClass = sObj.getClass();
-        }
-        else {
-          if (TRACE_ENABLE) {
-            System.out.println("Getter property method is not found "
-              + sb.toString());
-          }
-          sObj = null;
-        }
-      }
-      catch(Exception e) {
-        if (TRACE_ENABLE) {
-          System.out.println("Error while finding getter property method: "
-            + e.getMessage());
-        }
-        sObj = null;
-      }
-      sb.delete(0, sb.length());
-    }
-    sObj = sBakObj;
-    sObjClass = sBakClass;
-    if (TRACE_ENABLE) {
-      System.out.println("Flat command object property: " + fProp.toString());
-    }
+    Class sObjClass = sObj.getClass();
+    String fProp = sb.toString();
+    sb.delete(0, sb.length());
+    String lastProp = model.getPath()[model.getPath().length - 1].getName();
 
     // Retrieve destination setter property name of session object
     //   lastProp:     most child property of session object
     //   hookPropName: Sitting at source object class
     //                 compute the property name to set the destination
+    // Q: Why we do not use spring bean utils? A: since @OneToMany
     String hookPropName = "";
-    if (sObjClass != null && lastProp != null) {
-      try {
-        Field f = sObjClass.getDeclaredField(lastProp);
-        OneToMany annotation = (OneToMany) f.getAnnotation(OneToMany.class);
-        hookPropName = annotation.mappedBy();
-      }
-      catch(Exception e) {
-        if (TRACE_ENABLE) {
-          e.printStackTrace();
-        }
-        return false;
-      }
+    try {
+      Field f = sObjClass.getDeclaredField(lastProp);
+      OneToMany annotation = (OneToMany) f.getAnnotation(OneToMany.class);
+      hookPropName = annotation.mappedBy();
     }
-    else {
+    catch(Exception e) {
+      if (TRACE_ENABLE) {
+        e.printStackTrace();
+      }
       return false;
     }
     sb.delete(0, sb.length());
@@ -261,14 +200,14 @@ public class CommandObjectPropertyUtils {
     try {
       Method m = null;
       m = BeanUtils.findMethodWithMinimalParameters(
-        model.getCmdobj().getClass(), fProp.toString());
+        model.getCmdobj().getClass(), fProp);
       if (m.getParameterCount() == 0) {
         postedObj = m.invoke(model.getCmdobj());
         postedObjClass = m.getReturnType();
       }
       else {
         if (TRACE_ENABLE) {
-          System.out.println("Invalid method " + fProp.toString());
+          System.out.println("Invalid method " + fProp);
         }
       }
     }
@@ -315,6 +254,128 @@ public class CommandObjectPropertyUtils {
         "##############################################################");
     }
     return true;
+  }
+
+  public boolean removeChildObjectFromSession(Object sessionObject,
+    SFModel model, Object childObject) {
+    Object sObj = travelSessionObjectFromRootToParent(
+      sessionObject,
+      model,
+      null
+    );
+    if (sObj == null) {
+      return false;
+    }
+    Class sObjClass = sObj.getClass();
+    String lastProp = model.getPath()[model.getPath().length - 1].getName();
+    String methodName = "get" + Character.toUpperCase(
+      lastProp.charAt(0)) + lastProp.substring(1, lastProp.length()
+    );
+    try {
+      Method m = null;
+      m = BeanUtils.findMethodWithMinimalParameters(sObjClass, methodName);
+      if (m.getParameterCount() == 0) {
+        Object postedObj = m.invoke(sObj);
+        Class postedObjClass = m.getReturnType();
+        if (Collection.class.isAssignableFrom(postedObjClass)) {
+          Collection collection = (Collection) postedObj;
+          collection.remove(childObject); // @TODO review me, how orphaned object is reflected in database ? Is it removed?
+        }
+      }
+      else {
+        if (TRACE_ENABLE) {
+          System.out.println("Invalid method: " + methodName);
+        }
+      }
+    }
+    catch(Exception e) {
+      if (TRACE_ENABLE) {
+        e.printStackTrace();
+      }
+    }
+    // System.out.println("[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[");
+    // System.out.println("obj:      " + sObj.toString());
+    // System.out.println("objClass: " + sObj.getClass().toString());
+    // System.out.println("lastProp: " + lastProp);
+    // System.out.println("]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]");
+    return true;
+  }
+
+
+  private Object travelSessionObjectFromRootToParent(Object sessionObject,
+    SFModel model,
+    StringBuffer fProp
+  ) {
+    StringBuffer sb = new StringBuffer();
+    String lastProp = null;
+    Object sObj = sessionObject;
+    Object sBakObj = null;
+    Class sObjClass = model.getCmdobj().getClass();
+    Class sBakClass = sObjClass;
+    boolean isFirst = true;
+
+
+    if (TRACE_ENABLE) {
+      System.out.println(
+        "##############################################################");
+    }
+    if (fProp != null) {
+      fProp.append("get");
+    }
+    if (TRACE_ENABLE) {
+     System.out.println("Travel session object methods:");
+    }
+    for (ObjectIdentifier oi : model.getPath()) {
+      // compute getter method name to travel the session object
+      sb.append("get");
+      lastProp = oi.getName();
+      sb.append(Character.toUpperCase(lastProp.charAt(0)));
+      sb.append(lastProp.substring(1));
+      if (TRACE_ENABLE) {
+       System.out.println("\t" + sb.toString());
+      }
+
+      // flat property name compute
+      if (fProp != null && !isFirst) {
+        fProp.append(Character.toUpperCase(oi.getName().charAt(0)));
+        fProp.append(oi.getName().substring(1));
+      }
+      isFirst = false;
+
+      // trave one step property of session object
+      try {
+        Method m = BeanUtils.findMethodWithMinimalParameters(sObjClass,
+          sb.toString());
+        if (m.getParameterCount() == 0) {
+          sBakObj = sObj;
+          sObj = m.invoke(sObj);
+          sBakClass = sObjClass;
+          sObjClass = sObj.getClass();
+        }
+        else {
+          if (TRACE_ENABLE) {
+            System.out.println("Getter property method is not found "
+              + sb.toString());
+          }
+          sObj = null;
+        }
+      }
+      catch(Exception e) {
+        if (TRACE_ENABLE) {
+          System.out.println("Error while finding getter property method: "
+            + e.getMessage());
+        }
+        sObj = null;
+      }
+      sb.delete(0, sb.length());
+    }
+    sObj = sBakObj;
+    if (TRACE_ENABLE) {
+      System.out.println("Flat command object property: "
+        + (fProp == null ? "null" : fProp.toString())
+      );
+    }
+    return sObj;
   }
 
   private String extractEncodedRootKey(
@@ -367,10 +428,6 @@ public class CommandObjectPropertyUtils {
       }
     }
     return null;
-  }
-
-  public static CommandObjectPropertyUtils getSingletonInstance() {
-    return CommandObjectPropertyUtils.singleObject;
   }
 
   static {

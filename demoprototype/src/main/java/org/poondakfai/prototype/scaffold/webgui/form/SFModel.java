@@ -128,7 +128,7 @@ public class SFModel {
     StringBuffer buffer = new StringBuffer();
 
     for (ObjectIdentifier curObj : getPath()) {
-      buffer.append(this.getObjectIdentifier().getName());
+      buffer.append(this.getTargetObjectIdentifier().getName());
       buffer.append('/');
     }
     if (op == 'c' || op == 'u') {
@@ -214,7 +214,7 @@ public class SFModel {
     return null;
   }
 
-  private ObjectIdentifier getObjectIdentifier() {
+  public ObjectIdentifier getTargetObjectIdentifier() {
     ObjectIdentifier[] a = this.getPath();
     return a[a.length - 1];
   }

@@ -88,6 +88,7 @@ public class Form<T, ID> {
           break;
 
         case 'd':
+          result = doChildDeletePage(o);
           break;
 
         default:
@@ -192,6 +193,25 @@ public class Form<T, ID> {
     ) {
       return "redirect:" + model.getParentUrl();
     }
+    model.getRedirectAttrs().addAttribute("op", "c"); // @TODO how to retrieve this??
+    return "redirect:" + model.getParentUrl();
+  }
+
+  private String doChildDeletePage(SFModel model) {
+    System.out.println("private String doChildDeletePage(SFModel model)");
+    ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
+
+    // Lookup target object from its key
+    Integer key = Integer.parseInt(model.getTargetObjectIdentifier().getId());
+    Utilities utils = this.getTargetObject(model.getRequest()).getUtilities();
+    Object obj = utils.getKeyPool().lookup(model.getTargetObjectClass(), key);
+
+    if (!CommandObjectPropertyUtils.getSingletonInstance()
+      .removeChildObjectFromSession(sobj, model, obj)
+    ) {
+      return "redirect:" + model.getParentUrl();
+    }
+
     model.getRedirectAttrs().addAttribute("op", "c"); // @TODO how to retrieve this??
     return "redirect:" + model.getParentUrl();
   }

@@ -58,7 +58,9 @@ public class Role {
 
   public void setUser(User user) {
     this.user = user;
-    this.user.getAuthorities().add(this);
+    if (this.user != null) {
+      this.user.getAuthorities().add(this);
+    }
   }
 
   public void setApplications(Set<Application> applications) {

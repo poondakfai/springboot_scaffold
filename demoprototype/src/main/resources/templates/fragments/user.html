@@ -23,7 +23,7 @@
 <!-- ####################################################################### -->
 <div
   th:fragment="createupdateform (objname)"
-  th:with="cmdobj=${__${objname+'cmdobj'}__}"
+  th:with="cmdobj=${__${objname+'cmdobj'}__}, utils=${__${objname+'utils'}__}"
   th:unless="${__${objname+'cmdobj'}__}==null"
 >
     <h1>[Create Form] - Create use case</h1>
@@ -50,11 +50,9 @@
       <tbody>
         <tr th:each="obj : ${cmdobj.user.authorities}">
           <td th:text="${obj.id}">id</td>
-          <td>
-            <!-- null id mean session object -->
-            <!-- a th:href="'role?op=r'">Read</a --> <!-- read should be disabled for new or update usecase-->
-            <a th:href="'role?op=u'">Update</a>
-            <a th:href="'role?op=d'">Delete</a>
+          <td th:with="objkey=${utils.keyPool.searchOrCreateNewKey(obj)}">
+            <a th:href="${cmdobj.actionUrls[1]} + '/' + ${objkey} + '?op=u'">Update</a>
+            <a th:href="${cmdobj.actionUrls[1]} + '/' + ${objkey} + '?op=d'">Delete</a>
           </td>
         </tr>
       </tbody>
@@ -66,7 +64,7 @@
 <!-- ####################################################################### -->
 <div
   th:fragment="readform (objname)"
-  th:with="cmdobj=${__${objname+'cmdobj'}__}"
+  th:with="cmdobj=${__${objname+'cmdobj'}__}, utils=${__${objname+'utils'}__}"
   th:unless="${__${objname+'cmdobj'}__}==null"
 >
     <h1>[Read Form] - Read use case</h1>
@@ -92,11 +90,8 @@
       <tbody>
         <tr th:each="obj : ${cmdobj.user.authorities}">
           <td th:text="${obj.id}">id</td>
-          <td>
-            <!-- null id mean session object -->
-            <!-- a th:href="'role?op=r'">Read</a --> <!-- read should be disabled for new or update usecase-->
-            <a th:href="'role?op=u'">Update</a>
-            <a th:href="'role?op=d'">Delete</a>
+          <td th:with="objkey=${utils.keyPool.searchOrCreateNewKey(obj)}">
+            <a th:href="${cmdobj.actionUrls[1]} + '/' + ${objkey} + '?op=r'">Read</a>
           </td>
         </tr>
       </tbody>
