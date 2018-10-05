@@ -41,7 +41,7 @@
     <h1>Roles</h1>
 
     <form action="/user" th:action="${cmdobj.actionUrls[1]}" th:object="${__${objname+'cmdobj'}__}" method="post">
-      <label for="role.id">Id: </label><input type="text" th:field="*{role.id}" /> <br />
+      <label for="authorities.id">Id: </label><input type="text" th:field="*{authorities.id}" /> <br />
       <button type="submit" th:name="op" th:text="'Add C'" value="c" th:if="*{actionCode} == 'c'">[Add]</button>
       <button type="submit" th:name="op" th:text="'Add U'" value="c" th:if="*{actionCode} == 'u'">[Add]</button>
     </form>
@@ -81,7 +81,7 @@
     <h1>Roles</h1>
 
     <form action="/user" th:action="${cmdobj.actionUrls[1]}" th:object="${__${objname+'cmdobj'}__}" method="post">
-      <label for="role.id">Id: </label><input type="text" th:field="*{role.id}" /> <br />
+      <label for="authorities.id">Id: </label><input type="text" th:field="*{authorities.id}" /> <br />
       <button type="submit" th:name="op" th:text="'Add C'" value="c" th:if="*{actionCode} == 'c'">[Add]</button>
       <button type="submit" th:name="op" th:text="'Add U'" value="c" th:if="*{actionCode} == 'u'">[Add]</button>
     </form>

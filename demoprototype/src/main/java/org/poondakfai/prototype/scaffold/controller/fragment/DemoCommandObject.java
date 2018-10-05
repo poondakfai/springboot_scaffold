@@ -39,10 +39,6 @@ public class DemoCommandObject implements ICommandObject {
     return User.class;
   }
 
-  public Role getRole() {
-    return role;
-  }
-
   public Role getAuthorities() {
     return role;
   }
@@ -75,7 +71,7 @@ public class DemoCommandObject implements ICommandObject {
     }
   }
 
-  public void setRole(Role role) {
+  public void setAuthorities(Role role) {
     this.role = role;
   }
 
