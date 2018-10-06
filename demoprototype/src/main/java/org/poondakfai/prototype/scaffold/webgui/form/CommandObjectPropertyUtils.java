@@ -14,6 +14,9 @@ import java.util.Collection;
 
 
 public class CommandObjectPropertyUtils {
+  // Terms legend:
+  //   verb  copy: from flat property to session object
+  //         load: from session object to flat property
   private static final boolean TRACE_ENABLE = !false;
   private static final CommandObjectPropertyUtils singleObject;
 
@@ -156,7 +159,7 @@ public class CommandObjectPropertyUtils {
 
   public boolean copyChildObjectToSession(Object sessionObject,
     SFModel model) {
-    StringBuffer sb = new StringBuffer();
+    StringBuffer sb = new StringBuffer("get");
     Object sObj = travelSessionObjectFromRootToParent(sessionObject, model, sb);
     if (sObj == null) {
       return false;
@@ -301,6 +304,35 @@ public class CommandObjectPropertyUtils {
     return true;
   }
 
+  public boolean loadChildObject(Object childObj,
+    SFModel model, Object sessionObject) {
+    StringBuffer fProp = new StringBuffer("set");
+    travelSessionObjectFromRootToParent(sessionObject, model, fProp);
+
+    // load child object by invoking setter methods
+    try {
+      Method m = BeanUtils.findMethodWithMinimalParameters(
+        model.getCmdobj().getClass(),
+        fProp.toString()
+      );
+      if (m.getParameterCount() == 1) {
+        m.invoke(sessionObject, childObj);
+      }
+      else {
+        if (TRACE_ENABLE) {
+          System.out.println("Invalid method " + fProp);
+        }
+        return false;
+      }
+    }
+    catch(Exception e) {
+      if (TRACE_ENABLE) {
+        e.printStackTrace();
+      }
+      return false;
+    }
+    return true;
+  }
 
   private Object travelSessionObjectFromRootToParent(Object sessionObject,
     SFModel model,
@@ -318,9 +350,6 @@ public class CommandObjectPropertyUtils {
     if (TRACE_ENABLE) {
       System.out.println(
         "##############################################################");
-    }
-    if (fProp != null) {
-      fProp.append("get");
     }
     if (TRACE_ENABLE) {
      System.out.println("Travel session object methods:");

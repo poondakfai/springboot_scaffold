@@ -1,0 +1,46 @@
+<html>
+  <head>
+    <title>User/authorities R usecases</title>
+  </head>
+
+  <body>
+    <h1>Child</h1>
+    <h1>[Read Form] - Read use case</h1>
+    <hr />
+
+<div
+  th:with="cmdobj=${__${'formname'+'cmdobj'}__}, utils=${__${'formname'+'utils'}__}"
+>
+
+    <form action="/user/_/authorities" th:action="${cmdobj.actionUrls[0]}" th:object="${__${'formname'+'cmdobj'}__}" method="post">
+      <label for="authorities.id">id: </label><input type="text" th:field="*{authorities.id}" /> <br />
+      <!-- button type="submit" th:name="op" th:text="'Create'" value="p" th:if="*{actionCode} == 'c'">Create</button>
+      <button type="submit" th:name="op" th:text="'Update'" value="s" th:if="*{actionCode} == 'u'">Update</button -->
+    </form>
+
+    <h1>Application</h1>
+
+    <form action="/user/_/authorities" th:action="${cmdobj.actionUrls[1]}" th:object="${__${'formname'+'cmdobj'}__}" method="post">
+      <!-- APPLICATION FORM -->
+      <!-- label for="authorities.id">Id: </label><input type="text" th:field="*{authorities.id}" /> <br />
+      <button type="submit" th:name="op" th:text="'Add C'" value="c" th:if="*{actionCode} == 'c'">[Add]</button>
+      <button type="submit" th:name="op" th:text="'Add U'" value="c" th:if="*{actionCode} == 'u'">[Add]</button -->
+    </form>
+  
+    <table>
+      <tbody>
+        <tr th:each="obj : ${cmdobj.authorities.applications}"> <!-- flat property -->
+          <td th:text="${obj.id}">id</td>
+          <td th:with="objkey=${utils.keyPool.searchOrCreateNewKey(obj)}">
+            <a th:href="${cmdobj.actionUrls[1]} + '/' + ${objkey} + '?op=r'">Read</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  <a th:href="${cmdobj.actionUrls[2] + '?op=r'}">Cancel</a> <!-- Travel back object -->
+
+
+</div>
+
+  </body>
+</html>

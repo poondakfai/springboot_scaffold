@@ -166,12 +166,13 @@ public class SFModel {
     if (propNameCount == 0) {
       return result;
     }
-    result =  new String[propNameCount + 1];
+    result =  new String[propNameCount + 2];
     result[0] = url0;
     for (i = 0; i < propNameCount; i++){
       result[i + 1] = url0 + "/" + propNames[i];
       //System.out.println("\t\t\t" + result[i + 1]);
     }
+    result[i + 1] = this.getParentUrl();
     return result;
   }
 

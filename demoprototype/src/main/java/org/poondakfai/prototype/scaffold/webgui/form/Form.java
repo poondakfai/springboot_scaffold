@@ -83,10 +83,11 @@ public class Form<T, ID> {
     else {
       switch (o.getOperationCode()) {
         case 'c':
-          result = showChildCreatePage(o);
+          result = doChildCreatePage(o);
           break;
 
         case 'r':
+          result = showChildViewPage(o);
           break;
 
         case 'u':
@@ -254,8 +255,8 @@ public class Form<T, ID> {
     return "redirect:_";
   }
 
-  private String showChildCreatePage(SFModel model) {
-    System.out.println("private String createChildPageShow(SFModel model)");
+  private String doChildCreatePage(SFModel model) {
+    System.out.println("private String doChildCreatePage(SFModel model)");
     ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
 
     if (!CommandObjectPropertyUtils.getSingletonInstance()
@@ -267,23 +268,38 @@ public class Form<T, ID> {
     return "redirect:" + model.getParentUrl();
   }
 
+  private String showChildViewPage(SFModel model) {
+    System.out.println("private String showChildViewPage(SFModel model)");
+    ICommandObject sobj = loadTargetObject(model).getCmdobj();
+    sobj.setActionUrls(model.getActionUrls()); // @TODO
+
+    if (!CommandObjectPropertyUtils.getSingletonInstance()
+      .loadChildObject(getTargetChildObject(model), model, sobj)
+    ) {
+      model.getRedirectAttrs().addAttribute("op", "r"); // @TODO how to retrieve this??
+      return "redirect:" + model.getParentUrl();
+    }
+    return model.getViewTemplate();
+  }
+
   private String doChildDeletePage(SFModel model) {
     System.out.println("private String doChildDeletePage(SFModel model)");
     ICommandObject sobj = getTargetObject(model.getRequest()).getCmdobj();
 
-    // Lookup target object from its key
-    Integer key = Integer.parseInt(model.getTargetObjectIdentifier().getId());
-    Utilities utils = this.getTargetObject(model.getRequest()).getUtilities();
-    Object obj = utils.getKeyPool().lookup(model.getTargetObjectClass(), key);
-
     if (!CommandObjectPropertyUtils.getSingletonInstance()
-      .removeChildObjectFromSession(sobj, model, obj)
+      .removeChildObjectFromSession(sobj, model, getTargetChildObject(model))
     ) {
       return "redirect:" + model.getParentUrl();
     }
 
     model.getRedirectAttrs().addAttribute("op", "c"); // @TODO how to retrieve this??
     return "redirect:" + model.getParentUrl();
+  }
+
+  private Object getTargetChildObject(SFModel model) {
+    Integer key = Integer.parseInt(model.getTargetObjectIdentifier().getId());
+    Utilities utils = this.getTargetObject(model.getRequest()).getUtilities();
+    return utils.getKeyPool().lookup(model.getTargetObjectClass(), key);
   }
 
   private SessionObject loadTargetObject(SFModel sfModel) {
