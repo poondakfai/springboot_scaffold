@@ -40,13 +40,13 @@ public class Application {
   })
   private Role role;
 
-  @OneToMany(fetch = FetchType.EAGER, mappedBy = "application",
+  /*@OneToMany(fetch = FetchType.EAGER, mappedBy = "application",
     cascade = {CascadeType.ALL}, orphanRemoval = true)
-  private Set<Domain> domains;
+  private Set<Domain> domains;*/
 
 
   public Application() {
-    this.domains = new HashSet<Domain>();
+    //this.domains = new HashSet<Domain>();
   }
 
   public int getStartMileStone() {
@@ -69,9 +69,9 @@ public class Application {
     return this.role;
   }
 
-  public Set<Domain> getDomains() {
+  /*public Set<Domain> getDomains() {
     return this.domains;
-  }
+  }*/
 
   public void setStartMileStone(int startMileStone) {
     this.startMileStone = startMileStone;
@@ -94,7 +94,7 @@ public class Application {
     this.role.getApplications().add(this);
   }
 
-  public void setDomains(Set<Domain> domains) {
+  /*public void setDomains(Set<Domain> domains) {
     this.domains.retainAll(domains);
     this.domains.addAll(domains);
     for (Domain domain : this.domains) {
@@ -102,7 +102,7 @@ public class Application {
         domain.setApplication(this);
       }
     }
-  }
+  }*/
 }
 
 

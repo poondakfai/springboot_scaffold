@@ -10,8 +10,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.Column;
 
 
-@Entity
-@IdClass(DomainPK.class)
+//@Entity
+//@IdClass(DomainPK.class)
 public class Domain {
   static final long serialVersionUID = 2L;
 
@@ -53,7 +53,7 @@ public class Domain {
 
   public void setApplication(Application application) {
     this.application = application;
-    this.application.getDomains().add(this);
+    //this.application.getDomains().add(this);
   }
 }
 
