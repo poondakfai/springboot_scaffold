@@ -1,7 +1,3 @@
-# This repository just is used to test README.md file format effects
-## It contains no thing to be shared
-
-
 # Project springboot_scaffold
 Create Scaffold for springboot framework (jpa repository, spring mvc, thymeleaf)
 
@@ -91,3 +87,6 @@ rendering. Then it returns render requested Thymeleaf view.
         * Remove child object from root object
         * Prepare Thymeleaf request to redirect to parent form page (with related 'op' parameter)
     * T.B.D (be added more)
+* Issues:
+    * Version 0.0.6:
+        * Helper method travelSessionObjectFromRootToParent of class CommandObjectPropertyUtils do not take child object key in to account. This results in traveling stuck at property of List collection type (we need index of the list to retrieve the child object)
