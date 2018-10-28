@@ -38,6 +38,21 @@ public class Form<T, ID> {
     return this.repository;
   }
 
+  /**
+   * This is an entry point method of Thymeleaf controller. It does:
+   *     . Package requests into Scaffold framework model object
+   *     . Determine target usecase base on request parameters ('op' http
+   *       parameters)
+   *     . Invoke usecase correspondence method
+   *
+   * @param  op       http 'op' parameter depicts requested perform action
+   * @param  cmdobj   http form submit parameter packed by Thymeleaf framework
+   * @param  model    Thymeleaf framework model data structure
+   * @param  reAttrs  redirect parameters request to Thymeleaf to be fullfilled
+   * @param  req      generic http servlet request supports advance operations
+   * @param  status   Thymeleaf session status support session related operation
+   * @return          render requested view presented by Thymeleaf expression
+   */
   public String process(
     final String op,
     final ICommandObject cmdobj,          // Type declare should be specified
