@@ -287,6 +287,7 @@ public class Form<T, ID> {
     System.out.println("private String showChildViewPage(SFModel model)");
     ICommandObject sobj = loadTargetObject(model).getCmdobj();
     sobj.setActionUrls(model.getActionUrls()); // @TODO
+    CommandObjectPropertyUtils.getSingletonInstance().utility = this.getTargetObject(model.getRequest()).getUtilities();
 
     if (!CommandObjectPropertyUtils.getSingletonInstance()
       .loadChildObject(getTargetChildObject(model), model, sobj)

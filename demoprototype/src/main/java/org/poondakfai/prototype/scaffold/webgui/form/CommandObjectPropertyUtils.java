@@ -3,9 +3,12 @@ package org.poondakfai.prototype.scaffold.webgui.form;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import javax.persistence.OneToMany;
 import org.springframework.beans.BeanUtils;
 import org.poondakfai.prototype.scaffold.webgui.form.model.ICommandObject;
+import org.poondakfai.prototype.scaffold.webgui.form.model.Utilities;
 import java.lang.reflect.ParameterizedType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
@@ -19,6 +22,7 @@ public class CommandObjectPropertyUtils {
   //         load: from session object to flat property
   private static final boolean TRACE_ENABLE = !false;
   private static final CommandObjectPropertyUtils singleObject;
+  public Utilities utility;
 
 
   private CommandObjectPropertyUtils() {
@@ -380,6 +384,23 @@ public class CommandObjectPropertyUtils {
           sObj = m.invoke(sObj);
           sBakClass = sObjClass;
           sObjClass = sObj.getClass();
+          if (Iterable.class.isAssignableFrom(sObjClass)) {
+            Type type = m.getAnnotatedReturnType().getType();
+            if (type instanceof ParameterizedType) {
+              ParameterizedType ptype = (ParameterizedType) type;
+              if (ptype.getActualTypeArguments().length > 0) {
+                Type atype = ptype.getActualTypeArguments()[0];
+                String typeName = atype.getTypeName();
+                try {
+                  Class targetClass = Class.forName(typeName);
+                  Integer targetKey = new Integer(oi.getId());
+                  sObj = utility.getKeyPool().lookup(targetClass, targetKey);
+                  sObjClass = targetClass;
+                } catch (Exception e) {
+                }
+              }
+            }
+          }
         }
         else {
           if (TRACE_ENABLE) {

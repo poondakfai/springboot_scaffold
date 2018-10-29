@@ -3,6 +3,7 @@ package org.poondakfai.prototype.scaffold.controller.fragment;
 
 import org.poondakfai.prototype.scaffold.model.User;
 import org.poondakfai.prototype.scaffold.model.Role;
+import org.poondakfai.prototype.scaffold.model.Application;
 import org.poondakfai.prototype.scaffold.webgui.form.model.ICommandObject;
 
 
@@ -12,6 +13,7 @@ public class DemoCommandObject implements ICommandObject {
   private String op = "";
   private User user;
   private Role role;
+  private Application application;
 
   // In most case this method is rubbish
   // Thymeleaf set new object property for us
@@ -73,6 +75,10 @@ public class DemoCommandObject implements ICommandObject {
 
   public void setAuthorities(Role role) {
     this.role = role;
+  }
+
+  public void setAuthoritiesApplications(Application application) {
+    this.application = application;
   }
 
   public void setActionUrls(String[] actionUrls) {
