@@ -106,6 +106,7 @@ public class Form<T, ID> {
           break;
 
         case 'u':
+          result = showChildUpdatePage(o);
           break;
 
         case 'd':
@@ -295,6 +296,22 @@ public class Form<T, ID> {
       model.getRedirectAttrs().addAttribute("op", "r"); // @TODO how to retrieve this??
       return "redirect:" + model.getParentUrl();
     }
+    return model.getViewTemplate();
+  }
+
+  private String showChildUpdatePage(SFModel model) {
+    System.out.println("private String showChildUpdatePage(SFModel model)");
+    ICommandObject sobj = loadTargetObject(model).getCmdobj();
+    sobj.setActionUrls(model.getActionUrls()); // @TODO
+    CommandObjectPropertyUtils.getSingletonInstance().utility = this.getTargetObject(model.getRequest()).getUtilities();
+
+    if (!CommandObjectPropertyUtils.getSingletonInstance()
+      .loadChildObject(getTargetChildObject(model), model, sobj)
+    ) {
+      model.getRedirectAttrs().addAttribute("op", "u"); // @TODO how to retrieve this??
+      return "redirect:" + model.getParentUrl();
+    }
+    sobj.setActionUrls(model.getActionUrls());
     return model.getViewTemplate();
   }
 

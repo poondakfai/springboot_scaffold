@@ -45,6 +45,10 @@ public class DemoCommandObject implements ICommandObject {
     return role;
   }
 
+  public Application getAuthoritiesApplications() {
+    return this.application;
+  }
+
   public String[] getActionUrls() {
     return this.actionUrls;
   }

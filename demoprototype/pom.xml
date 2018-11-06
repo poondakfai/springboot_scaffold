@@ -8,7 +8,7 @@
 
   <groupId>org.poondakfai.prototype</groupId>
   <artifactId>scaffold</artifactId>
-  <version>0.0.6</version>
+  <version>0.0.7</version>
   <!--
     0.0.1: for vision detection (implementable verification)
     0.0.2: apply fragement with formname parameterized
@@ -16,6 +16,7 @@
     0.0.4: support delete parent object at home list page
     0.0.5: support update parent object at home list page
     0.0.6: support view child object list properties in read page
+    0.0.7: support view update child object page (showChildUpdatePage)
   -->
 
   <parent>
