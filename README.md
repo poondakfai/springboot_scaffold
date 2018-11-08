@@ -9,25 +9,25 @@ rendering. Then it returns render requested Thymeleaf view.
 # Process in detail
 ## Toplevel 'process' method:
 * Package requests into Scaffold framework model object
-* Determine target usecase base on 'op' request parameters
-* Invoke usecase correspondence method
-## Usecase correspondence methods:
+* Determine target activity base on 'op' http request parameters
+* Invoke activity correspondence method
+## Activity correspondence methods:
 ### Concepts:
 * Root object:   target object will be persisted via Repository
-* Child object:  property of Root object travel by subform editing
-* SessionObject: For usecases that leverage subform to fullfill its operations, multiple requests states need to be persisted into an session object. It holds:
+* Child object:  property of root object travel by subform editing
+* SessionObject: For activities that leverage subform to fullfill its usecase, multiple requests states need to be persisted into an session object. It holds:
     * ICommandObject: object hold posted or rendered data of http form
         * Flat property: post data to update currently edited child object
     * Utilities: object hold utilities helper object like key converter, request utilities...
-### Usecase classification:
-* Usecases that operate on root object
-* Usecases that operate on child object
-### Usecase name convention:
+### Activity classification:
+* Activities that operate on root object
+* Activities that operate on child object
+### Activity correspondence method name convention:
 * Prefix convention:
 * Prefix 'show': render form method
 * Prefix 'do'  : process form method, render action will be delegated to another controller via Thymeleaf redirecting mechanism
-### Usecase list:
-* Usecases that operate on root object
+### Activity list:
+* Activities that operate on root object
     * showRootListPage:
         * Clear session
         * Delegate repository to load list of root objects
@@ -66,7 +66,7 @@ rendering. Then it returns render requested Thymeleaf view.
         * Delegate repository to persit root object
         * Clear session object
         * Prepare Thymeleaf request to redirect to showRootListPage
-* Usecases that operate on child object
+* Activities that operate on child object
     * showChildViewPage:
         * Load session object (leverage loadTargetObject)
             * Create Thymeleaf model attribute variables for session object
